@@ -121,6 +121,37 @@ def draw_landmarks_on_image(image, detection_result):
 #     logging.info("Image enhancement complete.")
 #     return denoised_image
 
+def convert_to_bgr(image_path):
+    # Load the image
+    image = cv2.imread(image_path)
+
+    if image is None:
+        raise FileNotFoundError(f"Image not found at path: {image_path}")
+    
+    logging.info(f"Original image shape: {image.shape}")
+
+    # Check and convert to BGR if necessary
+    if len(image.shape) == 2:  # Grayscale
+        image_bgr = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+        logging.info("Converted grayscale to BGR.")
+    elif image.shape[2] == 4:  # RGBA
+        image_bgr = cv2.cvtColor(image, cv2.COLOR_RGBA2BGR)
+        logging.info("Converted RGBA to BGR.")
+    else:
+        image_bgr = image  # Already BGR
+        logging.info("Image is already BGR.")
+
+    # Verify it's a NumPy array
+    if not isinstance(image_bgr, np.ndarray):
+        image_bgr = np.array(image_bgr)
+        logging.info("Converted to NumPy ndarray.")
+
+    logging.info(f"Final NumPy array shape: {image_bgr.shape}, dtype: {image_bgr.dtype}")
+    return image_bgr
+
+# Example usage
+image_path = "sample_images/tesh_profile_crop.jpg"
+bgr_image = convert_to_bgr(image_path)
 
 # Main function
 def main(detector):
@@ -136,15 +167,20 @@ def main(detector):
 
     # load the image
     # Check to see if the program is reading the right image
-    image_path = "image-2.png"
+    image_path = "/Users/teshpierre/Documents/Programming/aEYE_health/sample_images/tesh_profile_crop.jpg" # "image-2.png"
     mp_image = mp.Image.create_from_file(image_path)
 
     # Detect face landmarks from the input image.
     detection_result = detector.detect(mp_image)
 
+    mp_image = convert_to_bgr(image_path) # convert the image sto BGR (mp landmark is expecting np.array from bgr files)
+    print("--------------------------------------------------", mp_image)
+
     # Visulaize detection
-    annotated_image = draw_landmarks_on_image(mp_image.numpy_view(), detection_result)
-    cv2.imshow("Image", cv2.cvtColor(annotated_image, cv2.COLOR_RGB2BGR))
+    annotated_image = draw_landmarks_on_image(mp_image, detection_result)
+    cv2.imshow("Image", annotated_image) # cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB))
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
     # if not os.path.exists(image_path):
     #     logging.error(f"File not found: {image_path}")
     # else:
